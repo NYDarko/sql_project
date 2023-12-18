@@ -1,0 +1,66 @@
+/* Query 1 */
+SELECT DISTINCT t1.Country,t1.name,highest_purchase
+from 
+(select c.Country as Country,c.FirstName as name,i.total as tot
+
+FROM Customer c
+JOIN Invoice i ON
+c.CustomerId = i.CustomerId
+JOIN InvoiceLine il ON
+il.InvoiceId = i.InvoiceId
+)t1
+
+JOIN 
+(SELECT i.BillingCountry as bcountry,max(i.total) as highest_purchase
+
+FROM Customer c
+JOIN Invoice i ON
+c.CustomerId = i.CustomerId
+JOIN InvoiceLine il ON
+il.InvoiceId = i.InvoiceId
+group by 1
+order by 2 desc)t2
+ON t1.Country = t2.bcountry AND
+t1.tot = t2.highest_purchase
+
+order by 1,3
+
+/* Query 2 */
+select e.FirstName as Manager,e.Title,count(*) as no_of_subordinates
+from Employee e
+JOIN Employee e1 ON
+e.EmployeeId = e1.ReportsTo
+group by 1
+
+/* Query 3 */
+
+select  g.Name,
+count(t.TrackId) as tracks
+from Genre g
+left join Track t on
+t.GenreId = g.GenreId
+group by g.Name
+order by 2 desc
+
+/* Query 4 */
+select sub1.*,lag(total_orders) OVER (ORDER BY (Year))AS lag,
+sub1.total_orders - lag(total_orders) OVER (ORDER BY (Year)) AS lag_difference
+from
+(
+SELECT 
+order_date AS Year,
+sum(Quantity) AS total_orders
+FROM
+ (
+SELECT i.InvoiceDate,
+STRFTIME('%Y', i.InvoiceDate) order_date,
+il.Quantity
+FROM Invoice i
+JOIN Customer c ON
+c.CustomerId = i.CustomerId
+JOIN InvoiceLine il ON
+i.InvoiceId = il.InvoiceId
+)sub
+group by sub.order_date
+)sub1
+
